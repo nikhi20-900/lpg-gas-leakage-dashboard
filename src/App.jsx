@@ -32,7 +32,7 @@ import {
 } from "recharts";
 import { useLpgRealtime } from "./hooks/useLpgRealtime";
 
-const THRESHOLD = 400;
+const THRESHOLD = 350;
 const MAX_VALUE = 1023;
 
 function getZone(value) {
@@ -98,7 +98,11 @@ function useRoute() {
 function App() {
   const lpg = useLpgRealtime();
   const [route, navigate] = useRoute();
-  const activePage = route === "/overview" ? "overview" : "dashboard";
+  const activePage = route === "/overview" ? "overview" : route === "/dashboard" ? "dashboard" : "landing";
+
+  if (activePage === "landing") {
+    return <LandingPage navigate={navigate} />;
+  }
 
   return (
     <div className="soft-grid min-h-screen">
@@ -131,7 +135,10 @@ function Shell({ activePage, navigate, lpg, children }) {
           </button>
 
           <nav className="flex flex-wrap items-center gap-2">
-            <NavButton active={activePage === "dashboard"} icon={Home} onClick={() => navigate("/")}>
+            <NavButton active={false} icon={ShieldCheck} onClick={() => navigate("/")}>
+              Start
+            </NavButton>
+            <NavButton active={activePage === "dashboard"} icon={Home} onClick={() => navigate("/dashboard")}>
               Dashboard
             </NavButton>
             <NavButton active={activePage === "overview"} icon={Info} onClick={() => navigate("/overview")}>
@@ -144,6 +151,47 @@ function Shell({ activePage, navigate, lpg, children }) {
 
       <main className="flex-1 py-6">{children}</main>
     </div>
+  );
+}
+
+function LandingPage({ navigate }) {
+  return (
+    <main className="relative grid min-h-screen overflow-hidden bg-[#0b0d0c] px-5 text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(77,166,90,0.12),transparent_22rem)]" />
+        <div className="absolute left-1/2 top-1/2 h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.03]" />
+        <div className="absolute left-1/2 top-1/2 h-[50rem] w-[50rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.025]" />
+      </div>
+
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center justify-center py-16 text-center"
+      >
+        <div className="mb-10 inline-flex items-center rounded-full border border-[#4da65a]/50 bg-[#4da65a]/15 px-7 py-3 text-base font-extrabold text-[#68d47b] shadow-[0_0_40px_rgba(77,166,90,0.12)] sm:text-lg">
+          IoT Safety System
+        </div>
+
+        <h1 className="max-w-5xl font-display text-[3.1rem] font-bold leading-[0.96] text-white sm:text-7xl lg:text-[5.8rem]">
+          Smart LPG Gas Leak Detection System
+        </h1>
+
+        <p className="mt-9 max-w-4xl text-xl font-bold leading-9 text-[#9da0aa] sm:text-2xl">
+          Real-time monitoring and automatic safety shutdown - powered by
+          <span className="block pt-2">ESP8266 and Firebase</span>
+        </p>
+
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard")}
+          className="mt-14 inline-flex min-h-[72px] items-center gap-3 rounded-2xl bg-[#4da65a] px-10 text-xl font-extrabold text-white shadow-[0_20px_60px_rgba(77,166,90,0.24)] transition hover:-translate-y-0.5 hover:bg-[#58b766] focus:outline-none focus:ring-4 focus:ring-[#4da65a]/35 sm:px-12 sm:text-2xl"
+        >
+          View Live Dashboard
+          <ChevronRight size={31} strokeWidth={3} />
+        </button>
+      </motion.section>
+    </main>
   );
 }
 
@@ -288,7 +336,7 @@ function HeroStatus({ reading, waitingMessage, permissionError }) {
           </div>
         </div>
         <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-ink shadow-sm">
-          Threshold: <span className="text-danger">400 ppm</span>
+          Threshold: <span className="text-danger">350 ppm</span>
         </div>
       </div>
     </Card>
@@ -429,7 +477,7 @@ function GasChart({ history }) {
             contentStyle={{ borderRadius: 14, border: "1px solid #e5e7eb", boxShadow: "0 16px 35px rgba(16,32,51,0.12)" }}
             formatter={(displayValue) => [`${displayValue} ppm`, "Gas level"]}
           />
-          <ReferenceLine y={THRESHOLD} stroke="#d92d20" strokeDasharray="7 6" label={{ value: "400 ppm", fill: "#d92d20", fontSize: 12 }} />
+          <ReferenceLine y={THRESHOLD} stroke="#d92d20" strokeDasharray="7 6" label={{ value: "350 ppm", fill: "#d92d20", fontSize: 12 }} />
           <Area type="monotone" dataKey="value" fill="url(#gasFill)" stroke="none" />
           <Line type="monotone" dataKey="value" stroke="#1677c8" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
         </AreaChart>
@@ -525,7 +573,7 @@ function OverviewPage() {
               This dashboard explains and monitors a real hardware prototype. The ESP8266 sends the latest gas reading and system state to Firebase, while the web app listens in realtime and presents the result in a simple control-room interface.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Badge>Threshold: 400 ppm</Badge>
+              <Badge>Threshold: 350 ppm</Badge>
               <Badge>Realtime Database</Badge>
               <Badge>Automatic servo shutoff</Badge>
             </div>
